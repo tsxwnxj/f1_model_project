@@ -7,7 +7,7 @@ df = pd.read_csv("f1_2018_2024_laps_dataset.csv")
 print("Original shape:", df.shape)
 
 # 2. PitStop 여부 생성
-df["PitStop"] = df["PitInTime"].notna().astype(int)
+df["PitStop"] = df["PitInTime"].notna().astype(int) # .notna()는 값이 NaN이면 False 출력 값이 있으면 True 출력
 
 # 3. Pit time -> seconds
 def pitTime_to_seconds(pittime):
@@ -20,7 +20,7 @@ def pitTime_to_seconds(pittime):
 df["PitIn_seconds"] = pd.to_timedelta(df["PitInTime"]).dt.total_seconds()
 df["PitOut_seconds"] = pd.to_timedelta(df["PitOutTime"]).dt.total_seconds()
 
-df["PitDuration"] = df["PitOut_seconds"] - df["PitIn_seconds"]
+df["PitDuration"] = df["PitOut_seconds"] - df["PitIn_seconds"] ## Fit에 걸린 총 시간 = 피트레인 나온시간 - 피트레인 들어간 시간
 
 # 4. 데이터 정렬
 df = df.sort_values(
@@ -35,15 +35,15 @@ df["PositionChange"] = (
 
 df["PositionChange"] = df["PositionChange"].fillna(0)
 
-# 6. gap to leader 계산
+# 6. gap to leader 계산 interval 값이라고 생각하면 됨
 df["LeaderLapTime"] = (
-    df.groupby(["Season", "Round", "LapNumber"])["LapTime"]
-    .transform("min")
+    df.groupby(["Season", "Round", "LapNumber"])["LapTime"] #시즌, 라운드, 랩넘버를 기준으로 그룹하고 랩타임 열만 추출
+    .transform("min") # 각 그룹에서 최소 랩타임을 계산, transform()으로 계산 결과를 원래 행 개수에 맞게 복제
 )
 
 df["GapToLeader"] = df["LapTime"] - df["LeaderLapTime"]
 
-# 7. gap to car ahead 계산
+# 7. gap to car ahead 계산 양수면 앞차보다 느림 음수면 앞차보다 빠른 페이스
 df = df.sort_values(
     ["Season", "Round", "LapNumber", "Position"]
 )
@@ -64,7 +64,7 @@ df["MaxLap"] = (
 
 df["LapProgress"] = df["LapNumber"] / df["MaxLap"]
 
-# 9. Stint progress
+# 9. Stint progress 타이어 스틴트는 얼마나 사용했는지 수치 스틴트가 20이면 그 타이어로 20랩돌았다
 df["StintMax"] = (
     df.groupby(["Season", "Round", "Driver", "Stint"])["TyreLife"]
     .transform("max")
