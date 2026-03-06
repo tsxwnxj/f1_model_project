@@ -1,3 +1,4 @@
+#Laptime_prediction_model.py
 import pandas as pd
 import numpy as np
 
@@ -17,12 +18,16 @@ target = "LapTime"
 X = df.drop(columns = [target])
 y = df[target]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size = 0.2,
-    random_state = 42
-)
+target = "LapTime"
+
+train_df = df[df["Season"] < 2024]
+test_df = df[df["Season"] == 2024]
+
+X_train = train_df.drop(columns=[target])
+y_train = train_df[target]
+
+X_test = test_df.drop(columns=[target])
+y_test = test_df[target]
 
 model = lgb.LGBMRegressor(
     n_estimators = 1000,
@@ -52,8 +57,16 @@ importance = pd.Series(
     index = X.columns
 ).sort_values(ascending=False)
 
-print(importance)
+print("Feature Importance\n",importance)
 
 joblib.dump(model, "F1_lap_time_model.pkl")
 
 print("Model saved")
+
+
+
+print(len(X_train), len(y_train))
+print(len(X_test), len(y_test))
+
+print(X_train.head())
+print(y_train.head())

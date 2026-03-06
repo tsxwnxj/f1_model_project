@@ -1,3 +1,4 @@
+#feature_selec.py
 import pandas as pd
 import numpy as np
 
@@ -7,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 import lightgbm as lgb
 
-df = pd.read_csv("f1_processed_dataset(2021_2024).csv")
+df = pd.read_csv("fixed_f1_processed_dataset(2021_2024).csv")
 
 numeric_df = df.select_dtypes(include = [np.number])
 

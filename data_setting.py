@@ -1,9 +1,11 @@
+#data_setting.py
+
 import pandas as pd
 import numpy as np
 
 
 # 1. 데이터 로드
-df = pd.read_csv("f1_2018_2024_laps_dataset.csv")
+df = pd.read_csv("f1_2021_2024_laps_dataset.csv")
 print("Original shape:", df.shape)
 
 # 2. PitStop 여부 생성
@@ -64,24 +66,15 @@ df["MaxLap"] = (
 
 df["LapProgress"] = df["LapNumber"] / df["MaxLap"]
 
-# 9. Stint progress 타이어 스틴트는 얼마나 사용했는지 수치 스틴트가 20이면 그 타이어로 20랩돌았다
-df["StintMax"] = (
-    df.groupby(["Season", "Round", "Driver", "Stint"])["TyreLife"]
-    .transform("max")
-)
-
-df["StintProgress"] = df["TyreLife"] / df["StintMax"]
-
-# 10. 평균 팀 페이스
-df["TeamAvgPace"] = (
-    df.groupby(["Season", "Round", "Team"])["LapTime"]
-    .transform("mean")
-)
-
 # 11. 평균 드라이버 페이스
+df = df.sort_values(["Season","Round","Driver","LapNumber"])
+
 df["DriverAvgPace"] = (
-    df.groupby(["Season", "Round", "Driver"])["LapTime"]
-    .transform("mean")
+    df.groupby(["Season","Round","Driver"])["LapTime"]
+    .expanding()
+    .mean()
+    .shift(1)
+    .reset_index(level=[0,1,2], drop=True)
 )
 
 # Categorical encoding
@@ -112,7 +105,9 @@ drop_cols = [
     "PitInTime",
     "PitOutTime",
     "LeaderLapTime",
-    "AheadLapTime"
+    "AheadLapTime",
+    "TeamAvgPace",
+    "StintMax"
 ]
 
 df = df.drop(columns = drop_cols)
@@ -128,8 +123,8 @@ print(df.head())
 
 # 저장
 df.to_csv(
-    "f1_processed_dataset.csv",
+    "f1_processed_dataset(2021_2024).csv",
     index=False
 )
 
-print("Saved: f1_processed_dataset(2018-2024).csv")
+print("Saved: f1_processed_dataset(2021-2024).csv")
